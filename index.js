@@ -9,7 +9,8 @@ const SECRET = 'nicollyrocha';
 require('dotenv').config();
 
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString:
+    'postgres://knfsktwyyseiqt:5fb727dd07e220e02e85d4c8944ec32b69d360ee0ed9cd417e594782bb92d3cb@ec2-34-235-31-124.compute-1.amazonaws.com:5432/d3h57i0h68jk1r',
   ssl: {
     rejectUnauthorized: false,
   },
