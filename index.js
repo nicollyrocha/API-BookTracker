@@ -14,7 +14,7 @@ const pool = new Pool({
 
 const app = express();
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 5432;
 
 app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
