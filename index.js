@@ -1,8 +1,8 @@
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
+const session = require('express-session');
 const bodyParser = require('body-parser');
-const routes = require('./src/routes');
 const { Pool } = require('pg');
 require('dotenv').config();
 
@@ -21,18 +21,28 @@ app.use(morgan('dev'));
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.json());
 app.use(cors());
-app.use(routes);
 
-app.get('/db', async (req, res) => {
+app.get('/users', async (req, res) => {
   try {
-    const client = await pool.connect();
-    const result = await client.query('SELECT * FROM user_web');
-    const results = { results: result ? result.rows : null };
-    res.render('pages/db', results);
-    client.release();
+    const { rows } = await pool.query('SELECT * FROM user_web');
+    return res.status(200).send(rows);
   } catch (err) {
     console.error(err);
-    res.send('Error ' + err);
+    return res.status(400).send(err);
+  }
+});
+
+app.post('/user', async (req, res) => {
+  const dados = req.body;
+  try {
+    const newUser = await pool.query(
+      `INSERT INTO user_web(username, password) VALUES ('${dados.userName}', '${dados.password}')`
+    );
+
+    return res.status(200).send(newUser);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send(err);
   }
 });
 
