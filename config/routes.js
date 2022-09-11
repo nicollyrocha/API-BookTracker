@@ -11,6 +11,10 @@ routes.get('/', (req, res) => {
   return res.json(db);
 });
 
+routes.get('/livros', (req, res) => {
+  return res.json(db);
+});
+
 routes.post('/add', (req, res) => {
   const body = req.body;
 
@@ -21,6 +25,15 @@ routes.post('/add', (req, res) => {
   db.push(body);
   return res.json(body);
 });
+
+const CarsController = require('../src/controllers/teste');
+
+routes.get('/cars', CarsController.all);
+routes.post('/cars', CarsController.create);
+
+const Cars = require('../src/controllers/teste');
+
+routes.get('/cars', Cars.all);
 
 routes.delete('/delete/:id', (req, res) => {
   const id = req.params.id;
