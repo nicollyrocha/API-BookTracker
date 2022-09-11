@@ -1,10 +1,11 @@
-require('dotenv').config();
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
 const bodyParser = require('body-parser');
-const routes = require('./config/routes');
+const routes = require('./src/routes');
 const { Pool } = require('pg');
+require('dotenv').config();
+
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
   ssl: {
