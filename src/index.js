@@ -90,9 +90,11 @@ app.put('/book/:username', async (req, res) => {
 
 app.post('/user', async (req, res) => {
   const dados = req.body;
+
   try {
+    const password_hash = await hash(dados.password, 8);
     const newUser = await pool.query(
-      gerarQueries.gerarQueryRegisterUser(dados)
+      gerarQueries.gerarQueryRegisterUser(dados, password_hash)
     );
 
     return res.status(200).send(newUser);

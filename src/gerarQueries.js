@@ -11,8 +11,8 @@ function gerarQuerySelectBooksByUser(username) {
   return query;
 }
 
-function gerarQueryRegisterUser(dados) {
-  const query = `INSERT INTO user_web(username, password) VALUES ('${dados.userName}', '${dados.password}')`;
+function gerarQueryRegisterUser(dados, password_hash) {
+  const query = `INSERT INTO user_web(username, password) VALUES ('${dados.userName}', '${password_hash}')`;
 
   return query;
 }
