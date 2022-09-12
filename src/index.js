@@ -7,6 +7,7 @@ const bodyParser = require('body-parser');
 const { Pool } = require('pg');
 const gerarQueries = require('./gerarQueries');
 const SECRET = 'nicollyrocha';
+const bcrypt = require('bcryptjs');
 require('dotenv').config();
 
 const pool = new Pool({
@@ -90,18 +91,21 @@ app.put('/book/:username', async (req, res) => {
 
 app.post('/user', async (req, res) => {
   const dados = req.body;
+  const rounds = 10;
+  const hashPassword = async () => {
+    const hash = await bcrypt.hash(dados.password, rounds);
+    try {
+      const newUser = await pool.query(
+        gerarQueries.gerarQueryRegisterUser(dados, hash)
+      );
 
-  try {
-    const password_hash = await hash(dados.password, 8);
-    const newUser = await pool.query(
-      gerarQueries.gerarQueryRegisterUser(dados, password_hash)
-    );
-
-    return res.status(200).send(newUser);
-  } catch (err) {
-    console.error(err);
-    return res.status(400).send(err);
-  }
+      return res.status(200).send(newUser);
+    } catch (err) {
+      console.error(err);
+      return res.status(400).send(err);
+    }
+  };
+  hashPassword();
 });
 
 app.post('/book', async (req, res) => {
@@ -123,34 +127,51 @@ app.post('/userLogin/:userName/:password', async (req, res) => {
     userName: '',
     password: '',
   };
-  try {
-    const { rows } = await pool.query(gerarQueries.gerarQueryLogin());
-    listaUser = rows;
-    listaUser.forEach((item) => {
-      if (
-        item.username === req.params.userName &&
-        item.password === req.params.password
-      ) {
-        userValid = {
-          userName: item.username,
-          password: item.password,
-        };
+  let hash;
+  let hash2;
+  let item2;
+  const userName = req.params.userName;
+  const hashPassword = async () => {
+    try {
+      const rowsPassword = await pool.query(
+        gerarQueries.gerarQueryPassword(userName)
+      );
+      const password_hash = rowsPassword.rows[0];
+      hash = await bcrypt.compare(req.params.password, password_hash.password);
+
+      try {
+        const { rows } = await pool.query(gerarQueries.gerarQueryLogin());
+        listaUser = rows;
+        listaUser.forEach((item) => {
+          item2 = item;
+
+          if (item.username === req.params.userName && hash === true) {
+            userValid = {
+              userName: item.username,
+              password: item.password,
+            };
+          }
+        });
+        hash2 = await bcrypt.compare(
+          req.params.password,
+          password_hash.password
+        );
+        if (req.params.userName === userValid.userName && hash2 === true) {
+          const token = jwt.sign({ userName: req.params.userName }, SECRET, {
+            expiresIn: 300,
+          });
+          return res.json({ auth: true, token: token });
+        } else {
+          res.status(401).end();
+        }
+      } catch (err) {
+        console.error(err);
       }
-    });
-    if (
-      req.params.userName === userValid.userName &&
-      req.params.password === userValid.password
-    ) {
-      const token = jwt.sign({ userName: req.params.userName }, SECRET, {
-        expiresIn: 300,
-      });
-      return res.json({ auth: true, token: token });
-    } else {
-      res.status(401).end();
+    } catch (err) {
+      console.error(err);
     }
-  } catch (err) {
-    console.error(err);
-  }
+  };
+  hashPassword();
 });
 
 app.delete('/book', async (req, res) => {

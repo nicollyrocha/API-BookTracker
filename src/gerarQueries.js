@@ -70,6 +70,12 @@ function gerarQueryLogin() {
   return query;
 }
 
+function gerarQueryPassword(userName) {
+  const query = `SELECT * FROM user_web WHERE username = '${userName}'
+  `;
+  return query;
+}
+
 function gerarQueryDeleteBook(dados) {
   const query = `DELETE FROM books WHERE
   book_id='${dados.book_id}'
@@ -86,4 +92,5 @@ module.exports = {
   gerarQuerySelectBooksByUser: gerarQuerySelectBooksByUser,
   gerarQueryUpdateBook: gerarQueryUpdateBook,
   gerarQueryDeleteBook: gerarQueryDeleteBook,
+  gerarQueryPassword: gerarQueryPassword,
 };
