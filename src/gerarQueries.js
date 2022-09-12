@@ -25,7 +25,8 @@ function gerarQueryUpdateBook(userName, dados) {
                 date_finished='${dados.date}'${
       dados.status === 'lido' &&
       dados.rating !== null &&
-      dados.rating !== undefined
+      dados.rating !== undefined &&
+      dados.rating !== ''
         ? `,
                 rating='${dados.rating}'`
         : ''
@@ -40,13 +41,15 @@ function gerarQueryUpdateBook(userName, dados) {
                 date_finished=${null}${
       dados.status === 'lido' &&
       dados.rating !== null &&
-      dados.rating !== undefined
+      dados.rating !== undefined &&
+      dados.rating !== ''
         ? `,
                 rating='${dados.rating}'`
         : ''
     }
                 WHERE username='${userName}'               
                 AND book_id='${dados.book_id}'`;
+    console.log('a2', query);
     return query;
   }
 }
@@ -65,7 +68,9 @@ function gerarQueryRegisterBook(dados) {
     dados.rating !== undefined
       ? 'rating,'
       : ''
-  }  username, created_at ${dados.date !== null ? `, date_finished` : ''}) 
+  }  username, created_at ${
+    dados.date && dados.date !== null ? `, date_finished` : ''
+  }) 
   VALUES ('${dados.title}', 
   '${dados.author}', '${dados.status}' ${
     dados.status === 'lido' &&
@@ -75,10 +80,9 @@ function gerarQueryRegisterBook(dados) {
       : ''
   } , '${dados.userName}', CURRENT_TIMESTAMP ${
     dados.status === 'lido'
-      ? `${dados.date !== null ? `, '${dados.date}'` : ''}`
+      ? `${dados.date && dados.date !== null ? `, '${dados.date}'` : ''}`
       : ''
   } )`;
-
   return query;
 }
 
