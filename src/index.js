@@ -5,6 +5,7 @@ const session = require('express-session');
 const jwt = require('jsonwebtoken');
 const bodyParser = require('body-parser');
 const { Pool } = require('pg');
+const gerarQueries = require('./gerarQueries');
 const SECRET = 'nicollyrocha';
 require('dotenv').config();
 
@@ -27,6 +28,16 @@ app.use(cors());
 
 let listaUser = [];
 
+let db = [
+  { 1: { Nome: 'Cliente 1', Idade: '20' } },
+  { 2: { Nome: 'Cliente 2', Idade: '20' } },
+  { 3: { Nome: 'Cliente 3', Idade: '20' } },
+];
+
+app.get('/', (req, res) => {
+  return res.json(db);
+});
+
 function verifyJWT(req, res, next) {
   const token = req.headers['x-access-token'];
   jwt.verify(token, SECRET, (err, decoded) => {
@@ -39,8 +50,37 @@ function verifyJWT(req, res, next) {
 
 app.get('/users', async (req, res) => {
   try {
-    const { rows } = await pool.query('SELECT * FROM user_web');
-    listaUser = rows.data;
+    const { rows } = await pool.query(gerarQueries.gerarQuerySelectAllUsers());
+
+    return res.status(200).send(rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send(err);
+  }
+});
+
+app.get('/books/:username', async (req, res) => {
+  const userName = req.params.username;
+  try {
+    const { rows } = await pool.query(
+      gerarQueries.gerarQuerySelectBooksByUser(userName)
+    );
+
+    return res.status(200).send(rows);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send(err);
+  }
+});
+
+app.put('/book/:username', async (req, res) => {
+  const userName = req.params.username;
+  const dados = req.body;
+  try {
+    const { rows } = await pool.query(
+      gerarQueries.gerarQueryUpdateBook(userName, dados)
+    );
+
     return res.status(200).send(rows);
   } catch (err) {
     console.error(err);
@@ -52,7 +92,7 @@ app.post('/user', async (req, res) => {
   const dados = req.body;
   try {
     const newUser = await pool.query(
-      `INSERT INTO user_web(username, password) VALUES ('${dados.userName}', '${dados.password}')`
+      gerarQueries.gerarQueryRegisterUser(dados)
     );
 
     return res.status(200).send(newUser);
@@ -62,12 +102,11 @@ app.post('/user', async (req, res) => {
   }
 });
 
-app.post('/book', verifyJWT, async (req, res) => {
-  console.log(req.userName + ' fez esta chamada!');
+app.post('/book', async (req, res) => {
   const dados = req.body;
   try {
     const newUser = await pool.query(
-      `INSERT INTO books(title, author, status, rating, username) VALUES ('${dados.title}', '${dados.author}', '${dados.status}', '${dados.rating}', '${req.userName}')`
+      gerarQueries.gerarQueryRegisterBook(dados)
     );
 
     return res.status(200).send(newUser);
@@ -83,9 +122,8 @@ app.post('/userLogin/:userName/:password', async (req, res) => {
     password: '',
   };
   try {
-    const { rows } = await pool.query('SELECT * FROM user_web');
+    const { rows } = await pool.query(gerarQueries.gerarQueryLogin());
     listaUser = rows;
-    console.log(rows);
     listaUser.forEach((item) => {
       if (
         item.username === req.params.userName &&
@@ -97,7 +135,6 @@ app.post('/userLogin/:userName/:password', async (req, res) => {
         };
       }
     });
-    console.log('alow', listaUser);
     if (
       req.params.userName === userValid.userName &&
       req.params.password === userValid.password
@@ -111,6 +148,20 @@ app.post('/userLogin/:userName/:password', async (req, res) => {
     }
   } catch (err) {
     console.error(err);
+  }
+});
+
+app.delete('/book', async (req, res) => {
+  const dados = req.body;
+  try {
+    const deleteBook = await pool.query(
+      gerarQueries.gerarQueryDeleteBook(dados)
+    );
+
+    return res.status(200).send(deleteBook);
+  } catch (err) {
+    console.error(err);
+    return res.status(400).send(err);
   }
 });
 
