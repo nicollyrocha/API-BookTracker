@@ -18,21 +18,37 @@ function gerarQueryRegisterUser(dados, password_hash) {
 }
 
 function gerarQueryUpdateBook(userName, dados) {
-  const query = `UPDATE books
+  if (dados.date !== null && dados.status === 'lido') {
+    const query = `UPDATE books
                 SET 
                 status='${dados.status}',
-                date_finished=CURRENT_TIMESTAMP${
-                  dados.status === 'lido' &&
-                  dados.rating !== null &&
-                  dados.rating !== undefined
-                    ? `,
+                date_finished='${dados.date}'${
+      dados.status === 'lido' &&
+      dados.rating !== null &&
+      dados.rating !== undefined
+        ? `,
                 rating='${dados.rating}'`
-                    : ''
-                }
+        : ''
+    }
                 WHERE username='${userName}'               
                 AND book_id='${dados.book_id}'`;
-
-  return query;
+    return query;
+  } else {
+    const query = `UPDATE books
+                SET 
+                status='${dados.status}',
+                date_finished=${null}${
+      dados.status === 'lido' &&
+      dados.rating !== null &&
+      dados.rating !== undefined
+        ? `,
+                rating='${dados.rating}'`
+        : ''
+    }
+                WHERE username='${userName}'               
+                AND book_id='${dados.book_id}'`;
+    return query;
+  }
 }
 
 function gerarQueryRegisterBook(dados) {
@@ -49,7 +65,7 @@ function gerarQueryRegisterBook(dados) {
     dados.rating !== undefined
       ? 'rating,'
       : ''
-  }  username, created_at ${dados.status === 'lido' ? `, date_finished` : ''}) 
+  }  username, created_at ${dados.date !== null ? `, date_finished` : ''}) 
   VALUES ('${dados.title}', 
   '${dados.author}', '${dados.status}' ${
     dados.status === 'lido' &&
@@ -58,7 +74,9 @@ function gerarQueryRegisterBook(dados) {
       ? `, '${dados.rating}' `
       : ''
   } , '${dados.userName}', CURRENT_TIMESTAMP ${
-    dados.status === 'lido' ? `, CURRENT_TIMESTAMP` : ''
+    dados.status === 'lido'
+      ? `${dados.date !== null ? `, '${dados.date}'` : ''}`
+      : ''
   } )`;
 
   return query;
